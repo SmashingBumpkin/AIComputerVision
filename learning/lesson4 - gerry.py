@@ -12,7 +12,7 @@ def onClick(event, x, y, flags, params):
 
 
 img = cv2.imread("gerry.png", cv2.IMREAD_COLOR)
-img = cv2.resize(img, None, fx=0.5, fy=0.5)
+img = cv2.resize(img, None, fx=0.8, fy=0.8)
 img_copy = img.copy()
 
 src_points = []
@@ -27,41 +27,38 @@ cv2.waitKey(0)
 # Calculates new image size
 cols = int(
     (
-        (
+        max(
             (
                 (src_points[0][0] - src_points[3][0]) ** 2
                 + (src_points[0][1] - src_points[3][1]) ** 2
             )
-            ** 0.5
-        )
-        + (
+            ** 0.5,
             (
                 (src_points[1][0] - src_points[2][0]) ** 2
                 + (src_points[1][1] - src_points[2][1]) ** 2
             )
-            ** 0.5
+            ** 0.5,
         )
     )
-    / 2
 )
 rows = int(
     (
-        (
+        max(
             (
                 (src_points[0][0] - src_points[1][0]) ** 2
                 + (src_points[0][1] - src_points[1][1]) ** 2
             )
-            ** 0.5
-        )
-        + (
+            ** 0.5,
             (src_points[2][0] - src_points[3][0]) ** 2
-            + (src_points[2][1] - src_points[3][1]) ** 2
+            + (src_points[2][1] - src_points[3][1]) ** 2,
         )
         ** 0.5
     )
     / 2
 )
-
+ratio = rows / cols
+cols = max(cols, 600)
+rows = int(ratio * cols)
 
 src_float = np.array(src_points, dtype=np.float32)
 
