@@ -2,7 +2,9 @@ import cv2
 import numpy as np
 
 
-img = cv2.imread("pannone.jpg")
+img = cv2.imread("night-sky3.jpg")
+scale = 0.3
+img = cv2.resize(img, None, fx=scale, fy=scale)
 img_grey = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
 
@@ -69,7 +71,7 @@ filtered_img = cv2.convertScaleAbs(der)
 # CARTOONIZATION
 ######################
 # Light blur to clean the image
-img_grey = cv2.medianBlur(img_grey, 5)
+img_grey = cv2.medianBlur(img_grey, 7)
 # extract contours to 8 bit with 5 wide kernel
 edges = cv2.Laplacian(img_grey, cv2.CV_8U, ksize=5)
 # clean edge image (keep only the strong edges) by applying a threshold
@@ -81,7 +83,9 @@ skt = cv2.cvtColor(thresholded, cv2.COLOR_GRAY2BGR)
 # join images to make cartoon??
 # filtered_img = cv2.addWeighted(color_img, 0.8, skt, 0.2, 0)
 filtered_img = cv2.bitwise_and(color_img, skt)
+# filtered_img = skt
 
 cv2.imshow("ORIGINAL", img)
 cv2.imshow("Image", filtered_img)
+cv2.imshow("contour", skt)
 cv2.waitKey(0)
