@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 
 base_img = cv2.imread("learning/Exercise1 - Billboard/billboard.jpg")
-base_img = cv2.resize(base_img, None, fx=0.2, fy=0.2)
+# base_img = cv2.resize(base_img, None, fx=0.2, fy=0.2)
 
 img_copy = base_img.copy()
 
@@ -23,9 +23,9 @@ dest_points = []
 cv2.namedWindow("Img", cv2.WINDOW_FREERATIO)
 
 # Gets corners of billboard
-# cv2.setMouseCallback("Img", onClick)
-# cv2.imshow("Img", img_copy)
-# cv2.waitKey(0)
+cv2.setMouseCallback("Img", onClick)
+cv2.imshow("Img", img_copy)
+cv2.waitKey(0)
 
 # gets sizes of images
 (
@@ -37,8 +37,8 @@ img2_h, img2_w = img2.shape[:2]
 # corners of image
 src_points = np.array([[0, 0], [0, img2_h], [img2_w, img2_h], [img2_w, 0]], np.float32)
 # corners of billboard
-# dest_float = np.array(dest_points, dtype=np.float32)
-dest_float = np.array([[64, 90], [62, 477], [531, 410], [534, 149]], dtype=np.float32)
+dest_float = np.array(dest_points, dtype=np.float32)
+# dest_float = np.array([[64, 90], [62, 477], [531, 410], [534, 149]], dtype=np.float32)
 
 # creates transformation array
 M = cv2.getPerspectiveTransform(src_points, dest_float)
