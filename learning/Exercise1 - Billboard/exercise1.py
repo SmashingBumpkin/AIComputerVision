@@ -59,3 +59,4 @@ final_img = cv2.bitwise_or(masked_billboard, warped_img)
 
 cv2.imshow("Img", combined_img)
 cv2.waitKey(0)
+cv2.imwrite("PannoneBill.jpg", combined_img)

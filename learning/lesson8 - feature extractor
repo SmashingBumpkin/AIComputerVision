@@ -1,0 +1,61 @@
+import cv2
+import cv2.xfeatures2d
+import numpy as np
+
+img = cv2.imread("night-sky3.jpg")
+
+#########SURF
+# DOES NOT WORK (PATENTED)
+
+# surf = cv2.xfeatures2d.SURF.create()
+
+#########SIFT
+sift = cv2.SIFT_create()
+
+keypoints, descriptors = sift.detectAndCompute(img, None)
+
+#########AKAZE
+akaze = cv2.AKAZE_create()
+
+keypoints, descriptors = akaze.detectAndCompute(img, None)
+
+
+cv2.drawKeypoints(
+    img, keypoints, img, (51, 164, 200), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS
+)  # draws keypoints onto same image as first image
+# Specify the color of the points and how they are drawn
+# cv2.namedWindow("img", cv2.WINDOW_FREERATIO)
+# cv2.imshow("img", img)
+# cv2.waitKey(0)
+
+
+########## MATCH 2 IMAGES
+img1 = cv2.imread("jeff.png")
+img2 = cv2.imread("PannoneBill.jpg")
+
+akaze = cv2.AKAZE_create()
+kpts1, dsc1 = akaze.detectAndCompute(img1, None)
+kpts2, dsc2 = akaze.detectAndCompute(img2, None)
+
+# Create a brute force matcher between the binary images
+bf = cv2.BFMatcher(cv2.NORM_HAMMING)
+matches = bf.match(dsc1, dsc2)  # Simple brute force match
+# matches = bf.knnMatch(dsc1, dsc2, k=2)
+
+img_matches = cv2.drawMatches(
+    img1,
+    kpts1,
+    img2,
+    kpts2,
+    matches,
+    img2,
+    flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS,
+)
+
+cv2.drawKeypoints(
+    img1, keypoints, img1, (51, 164, 200), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS
+)  # draws keypoints onto same image as first image
+# Specify the color of the points and how they are drawn
+cv2.namedWindow("img", cv2.WINDOW_FREERATIO)
+cv2.imshow("img", img_matches)
+cv2.waitKey(0)
