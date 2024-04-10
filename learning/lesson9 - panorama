@@ -1,0 +1,57 @@
+import cv2
+import numpy as np
+
+imgLh = cv2.imread("left.png")
+imgRh = cv2.imread("right.png")
+cv2.namedWindow("img", cv2.WINDOW_FREERATIO)
+
+
+# create feature extractor:
+orb = cv2.ORB_create()
+
+# THe two mandatory inputs are:
+# 1. the image
+# 2. the mask (eg if you just care about a smaller part of the image)
+kpt1, dsc1 = orb.detectAndCompute(imgRh, None)
+kpt2, dsc2 = orb.detectAndCompute(imgLh, None)
+
+# Create a brute force matcher between the binary images
+bf_matcher = cv2.BFMatcher(cv2.NORM_HAMMING)
+matches = bf_matcher.knnMatch(dsc1, dsc2, k=2)  # Simple brute force match
+# setting key = 2 means it matches each point with the 2 closest
+# points in the other array
+# THis returns an object that contains (among other things):
+# - a list of points, each containing a list of the k best matches
+
+# perform the ratio test:
+# THe ratio of the quality of the first and second best points can be computed
+# A match is correct if the ratio is below a certain threshold
+# The quality is measured using the Hamming distance
+good_matches = []
+for m, n in matches:  # K=2 so just two points needed for checkin
+    if m.distance < 0.3 * n.distance:
+        # Lowering the value improves the quality of matches
+        good_matches.append(m)
+
+if len(good_matches) > 4:
+    src_points = np.float32([kpt1[m.queryIdx].pt for m in good_matches])
+    dst_points = np.float32([kpt2[n.trainIdx].pt for n in good_matches])
+    # We get the point value from the kpt1 array for each m that is a good match
+    # queryIdx is a point belinging to query img (img1 for us)
+    # traingingIdx is a point belonging to the training image (img2 for us)
+
+    # computes the homography matrix
+    M, mask = cv2.findHomography(src_points, dst_points)
+
+    # transforms the lh img and stitches it together with the rh img
+    # Takes images, matrix and new size as inputs
+    dst = cv2.warpPerspective(
+        # imgRh, M, (imgRh.shape[1] + imgLh.shape[1], imgRh.shape[0] + imgLh.shape[0])
+        imgRh,
+        M,
+        (int(imgRh.shape[1] * 1.5), int(imgRh.shape[0])),
+    )
+    dst[0 : imgLh.shape[0], 0 : imgLh.shape[1]] = imgLh.copy()
+
+    cv2.imshow("img", dst)
+    cv2.waitKey(0)

@@ -1,5 +1,0 @@
-import cv2
-import numpy as np
-
-imgL = cv2.imread("left.png")
-imgR = cv2.imread("right.png")
