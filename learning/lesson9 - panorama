@@ -2,7 +2,9 @@ import cv2
 import numpy as np
 
 imgLh = cv2.imread("left.png")
+# imgLh = cv2.imread("Panaramanonnerone_LH.jpg")
 imgRh = cv2.imread("right.png")
+# imgRh = cv2.imread("Panaramanonnerone_RH.jpg")
 cv2.namedWindow("img", cv2.WINDOW_FREERATIO)
 
 
@@ -33,6 +35,7 @@ for m, n in matches:  # K=2 so just two points needed for checkin
         # Lowering the value improves the quality of matches
         good_matches.append(m)
 
+print(len(good_matches))
 if len(good_matches) > 4:
     src_points = np.float32([kpt1[m.queryIdx].pt for m in good_matches])
     dst_points = np.float32([kpt2[n.trainIdx].pt for n in good_matches])
@@ -42,6 +45,14 @@ if len(good_matches) > 4:
 
     # computes the homography matrix
     M, mask = cv2.findHomography(src_points, dst_points)
+    """
+    The homography matrix is a 3x3 that looks like this
+    a b x
+    c d y
+    0 0 1
+    x and y are the linear translations, so can be used to remove the black
+    rectangle from the edge of the image
+    """
 
     # transforms the lh img and stitches it together with the rh img
     # Takes images, matrix and new size as inputs
@@ -49,7 +60,10 @@ if len(good_matches) > 4:
         # imgRh, M, (imgRh.shape[1] + imgLh.shape[1], imgRh.shape[0] + imgLh.shape[0])
         imgRh,
         M,
-        (int(imgRh.shape[1] * 1.5), int(imgRh.shape[0])),
+        (
+            imgRh.shape[1] + imgLh.shape[1] - int(M[0, 2]),
+            imgRh.shape[0],
+        ),
     )
     dst[0 : imgLh.shape[0], 0 : imgLh.shape[1]] = imgLh.copy()
 
