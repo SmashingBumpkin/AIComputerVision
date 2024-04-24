@@ -42,6 +42,7 @@ print(accuracy_score(Ytest, y_pred))
 
 mat = confusion_matrix(Ytest, y_pred)
 
+sns.heatmap(mat, square=True, annot=True, cbar=False)
 plt.xlabel("pred val")
 plt.ylabel("tru val")
-sns.heatmap(mat, square=True, annot=True, cbar=False)
+plt.show()
