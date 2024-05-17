@@ -28,42 +28,30 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 class OurMLP(nn.Module):
     def __init__(self):
         super().__init__()
-        self.mlp = nn.Sequential(
-            nn.Linear(
-                28 * 28, 50
-            ),  # a single column of neurons (perceptrons) is called "linear", the equivalent in tf is "dense"
-            # We define it by the number of inputs and number of outputs into each node
-            # The image is 28 x 28 so that's the input, even though the image is 2d the input will be 1d
-            nn.Sigmoid(),  # Following each perceptron layer we need an activation function
-            # This takes the data from the previous layer, and if it is above a certain threshold, it will
-            # pass that data on to the following layer
-            # Sigmoid activation functions does not generally take any parameters
-            nn.Linear(
-                50, 100
-            ),  # This layer takes the same dim input as the prev output
-            nn.Sigmoid(),
-            nn.Linear(100, 50),
-            nn.Sigmoid(),
-            nn.Linear(
-                50, 10
-            ),  # the final layer will have the same number of outputs as there are classes in the input data
-            # In this dataset there were 10 classes in the input
-        )
+
+        # These are not in a sequential block, so we can connect them as we please
+        # This allows us to feed forward and back as we please
+        # This is what a convolutional NN is doing
+        self.input_layer = nn.Linear(28 * 28, 50)
+        self.hidden1 = nn.Linear(50, 100)
+        self.hidden2 = nn.Linear(100, 50)
+        self.output_layer = nn.linear(50, 10)
+        self.activation = nn.Sigmoid()
         self.flatten = nn.Flatten()
         # The flatten layer takes a muti dim input and provides as output a mono-dim tensor
 
     def forward(self, x):
+        # We are redefining the same sequential steps from the previous model, but manually
+        x = self.flatten(x)
+        x = self.input_layer(x)
+        x = self.activation(x)
+        x = self.hidden1(x)
+        x = self.activation(x)
+        x = self.hidden2(x)
+        x = self.activation(x)
+        x = self.output_layer(x)
         x = self.flatten(x)  # flatten the data for the mlp (mlp just takes 1D vector)
-        logits = self.mlp(x)  # this will be an array of values from -inf to +inf
-        # A probability of 0.5 corresponds to a logit of 0. 1 = +inf, 0 = -inf
-        # it will have a size of 10, because there are 10 classes
-        # it will contain the probabilities of each class
-        """LOGITS: 
-        the vector of raw (non-normalized) predictions that a classification model generates, 
-        which is ordinarily then passed to a normalization function. If the model is solving a 
-        multi-class classification problem, logits typically become an input to the softmax 
-        function. The softmax function then generates a vector of (normalized) probabilities 
-        with one value for each possible class."""
+        logits = self.mlp(x)
         return logits
 
 

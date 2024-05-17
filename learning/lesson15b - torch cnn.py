@@ -25,52 +25,56 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 # create the MLP (Multi Layer Perceptor)
-class OurMLP(nn.Module):
+class OurCNN(nn.Module):
     def __init__(self):
         super().__init__()
+        self.cnn = nn.Sequential(
+            nn.Conv2d(
+                in_channels=1, out_channels=5, kernel_size=3
+            ),  # 1 input channel because greyscale
+            # we can choose as many outputs as we want, more channels means more data can be extracted
+            # output channels = 5 means 5 filters are being applied
+            # kernel size of 3
+            nn.ReLU(),  # activation function
+            # Could be called "efficient sigmoid"
+            nn.Conv2d(in_channels=5, out_channels=10, kernel_size=3),
+            nn.ReLU(),
+        )  ############# We've slightly reduced dimensions but increased channels 10-fold, doesn't this increase training time again???
+        ############# For "horizontal" images do rectangular kernels/strides work better?
         self.mlp = nn.Sequential(
-            nn.Linear(
-                28 * 28, 50
-            ),  # a single column of neurons (perceptrons) is called "linear", the equivalent in tf is "dense"
-            # We define it by the number of inputs and number of outputs into each node
-            # The image is 28 x 28 so that's the input, even though the image is 2d the input will be 1d
-            nn.Sigmoid(),  # Following each perceptron layer we need an activation function
-            # This takes the data from the previous layer, and if it is above a certain threshold, it will
-            # pass that data on to the following layer
-            # Sigmoid activation functions does not generally take any parameters
-            nn.Linear(
-                50, 100
-            ),  # This layer takes the same dim input as the prev output
-            nn.Sigmoid(),
-            nn.Linear(100, 50),
-            nn.Sigmoid(),
-            nn.Linear(
-                50, 10
-            ),  # the final layer will have the same number of outputs as there are classes in the input data
-            # In this dataset there were 10 classes in the input
+            nn.Linear(in_features=24 * 24 * 10, out_features=10),
+            # The in features here need to be the same as the output from the conv layer
+            nn.Dropout(0.5),
+            # THis will randomly remove 50% of the connections in a batch
+            # THis stops the edges from being modified in a specific batch run
+            # This can avoid overfitting
+            # THESE MUST BE REMOVED WHEN USING THE MODEL!!!!
+            # using the function model.eval() will set them to 0
+            nn.ReLU(),
+            nn.Linear(in_features=10, out_features=10),
         )
-        self.flatten = nn.Flatten()
-        # The flatten layer takes a muti dim input and provides as output a mono-dim tensor
 
     def forward(self, x):
-        x = self.flatten(x)  # flatten the data for the mlp (mlp just takes 1D vector)
-        logits = self.mlp(x)  # this will be an array of values from -inf to +inf
-        # A probability of 0.5 corresponds to a logit of 0. 1 = +inf, 0 = -inf
-        # it will have a size of 10, because there are 10 classes
-        # it will contain the probabilities of each class
-        """LOGITS: 
-        the vector of raw (non-normalized) predictions that a classification model generates, 
-        which is ordinarily then passed to a normalization function. If the model is solving a 
-        multi-class classification problem, logits typically become an input to the softmax 
-        function. The softmax function then generates a vector of (normalized) probabilities 
-        with one value for each possible class."""
-        return logits
+        # We are redefining the same sequential steps from the previous model, but manually
+        x = self.cnn(x)
+        x = torch.flatten(x, 1)  # (input data, dimension to flatten on)
+        x = self.mlp(x)
 
+
+############ FROM HERE IS IDENTICAL TO THE ANN DONE IN PREVIOUS LECTURES ############
 
 # TO actually make and train a model we first need to initialize:
-model = OurMLP().to(device)
+model = OurCNN().to(device)
 # This gives the model to our best hardware (ie, if poss the GPU)
 # We have to provide the hyper parameters, these are the things outside of the model
+
+# THis is just during development to figure out the size of the vector being passed into the MLP
+# This tells use the shape of the model that is coming out of the convolution layer
+test_x = torch.rand(
+    (1, 28, 28)
+)  # But the actual input will be batch size * channels * height * width
+test_y = model(test_x)
+exit()
 
 epochs = 2  # How many times the model should iterate over whole dataset
 
